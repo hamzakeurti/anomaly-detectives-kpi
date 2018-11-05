@@ -3,3 +3,6 @@ Repo for the anomaly detection project of the fall 2018 Advanced Network Managem
 
 Overleaf link --> https://www.overleaf.com/5296399341dkfttxhhmtdw
 
+Competition website: 
+- login: nathan.e.d.cornille@gmail.com
+- pw: aiopsdetectives
