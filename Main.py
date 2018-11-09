@@ -1,20 +1,36 @@
-from numpy import exp, array, random, dot
-import numpy as np
-import pandas as pd
-import trainer
-from sklearn.metrics import f1_score
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+import Util
+import Analyze
+import time
 import matplotlib.pyplot as plt
+from MovingAveragePredictor import MovingAveragePredictor
+from MovingAverageRollingStdPredictor import MovingAverageRollingStdPredictor
+
+FILE_NAME = 'train.csv'#'train/54e8a140f6237526.csv'
+
+# Read file
+start_time = time.time()
+ids_data = Util.file_name_to_ids_datas(FILE_NAME)
+print(f'Read file {FILE_NAME} in {time.time() - start_time}s')
 
 
+# Predict
+map = MovingAveragePredictor(50, 5)
+start_time = time.time();
+ids_predictions = map.predict(ids_data)
+print(f'Made predictions in {time.time() - start_time}s')
 
-# IMPORTING DATA
-Xy_train = pd.read_csv('./train.csv')
-X_test = pd.read_csv('./test.csv')
-X_train = Xy_train[['timestamp', 'value', 'KPI ID']]
-y_train = Xy_train['label']
+# Get anomalies using moving averages
+for id in ids_data:
+    start_time = time.time()
+    # Create blocks of anomalies from training data
+    sections = Analyze.data_to_sections(ids_data[id])
+    # Adjust predictions to blocks of anomalies
+    adjusted_predictions = Analyze.adjust_prediction(ids_predictions[id], sections, 7)
+    # Draw graph
+    plt.figure(id)
+    Util.draw_graph(ids_data[id][:], adjusted_predictions[:])
+    precision, recall, fscore = Analyze.analyze({id: ids_data[id]}, {id: adjusted_predictions})
+    print(f'{id}: precision = {precision}, recall = {recall}, f-score = {fscore}')
+    break
 
-# WRITING OUTPUT
-y_pred = trainer.predict(X_test) #Assuming a dataframe with columns 'KPI ID', timestamp, predict
-y_pred.to_csv("./predict.csv")
+plt.show()
