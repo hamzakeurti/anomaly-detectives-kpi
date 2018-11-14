@@ -38,7 +38,6 @@ def analyze(ids_data, ids_predictions, T=7):
         predictions = ids_predictions[id]
         sections = data_to_sections(data)
         adjusted_predictions = adjust_prediction(predictions, sections, T)
-        n_true_positive = np.sum(adjusted_predictions)
         n_true_positive = np.sum(adjusted_predictions & data['label'])
         n_selected = np.sum(adjusted_predictions)
         n_positive = np.sum(data['label'])

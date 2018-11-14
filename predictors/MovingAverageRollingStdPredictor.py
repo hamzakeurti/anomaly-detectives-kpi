@@ -1,4 +1,4 @@
-from MovingAveragePredictor import MovingAveragePredictor
+from predictors.MovingAveragePredictor import MovingAveragePredictor
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt

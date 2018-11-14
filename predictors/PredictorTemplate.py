@@ -1,6 +1,6 @@
 class Predictor:
-    def train(self):
-
+    def fit(self):
+        pass
     
     def predict(self):
         pass

@@ -1,24 +1,33 @@
+#%%
+import pandas
+
 import Util
 import Analyze
 import time
 import matplotlib.pyplot as plt
-from MovingAveragePredictor import MovingAveragePredictor
-from MovingAverageRollingStdPredictor import MovingAverageRollingStdPredictor
+from predictors.MovingAveragePredictor import MovingAveragePredictor
+from predictors.MovingAverageRollingStdPredictor import MovingAverageRollingStdPredictor
+from predictors.RandomForestPredictor import RandomForestPredictor
 
-FILE_NAME = 'train.csv'#'train/54e8a140f6237526.csv'
+FILE_NAME = 'data/train.csv'#'train/54e8a140f6237526.csv'
 
+#%%
 # Read file
 start_time = time.time()
+#raw_data = pandas.read_csv(FILE_NAME)
 ids_data = Util.file_name_to_ids_datas(FILE_NAME)
 print(f'Read file {FILE_NAME} in {time.time() - start_time}s')
 
-
+#%%
+# CHOOSE PREDICTOR
+predictor = MovingAveragePredictor(50, 5)
+# TODO Add per-id functionality to all predictors, or move it inside for moving average predictor
 # Predict
-map = MovingAveragePredictor(50, 5)
 start_time = time.time();
-ids_predictions = map.predict(ids_data)
+ids_predictions = predictor.predict(ids_data)
 print(f'Made predictions in {time.time() - start_time}s')
 
+#%%
 # Get anomalies using moving averages
 for id in ids_data:
     start_time = time.time()

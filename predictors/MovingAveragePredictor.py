@@ -1,4 +1,4 @@
-from Predictor import Predictor
+from predictors.PredictorTemplate import Predictor
 import pandas as pd
 import numpy as np
 
@@ -7,7 +7,7 @@ class MovingAveragePredictor(Predictor):
         self.width = width
         self.sigma = sigma
     
-    def train(self):
+    def fit(self):
         return
 
     def predict(self, datas):
