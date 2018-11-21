@@ -27,7 +27,33 @@ def adjust_prediction(prediction, sections, T):
             adjusted_prediction[i] = is_true_positive
     return adjusted_prediction
 
-def analyze(ids_data, ids_predictions, T=7):
+def analyze(data, predictions, T=7):
+
+    total_true_positive = 0
+    total_selected = 0
+    total_positive = 0
+    sections = data_to_sections(data)
+    adjusted_predictions = adjust_prediction(predictions, sections, T)
+    n_true_positive = np.sum(adjusted_predictions & data['label'])
+    n_selected = np.sum(adjusted_predictions)
+    n_positive = np.sum(data['label'])
+    total_true_positive  = total_true_positive + n_true_positive
+    total_selected = total_selected + n_selected
+    total_positive = total_positive + n_positive
+    precision = 0
+    if n_selected:
+        precision = n_true_positive / n_selected
+    recall = 0
+    if n_positive:
+        recall = n_true_positive / n_positive
+    fscore = 0
+    if precision + recall:
+        fscore = 2 * precision * recall / (precision + recall)
+
+    return precision, recall, fscore
+
+
+def analyze_per_id(ids_data, ids_predictions, T=7):
     sections = {}
     adjusted_predictions = {}
     total_true_positive = 0
