@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from predictors.MovingAveragePredictor import MovingAveragePredictor
 from predictors.MovingAverageRollingStdPredictor import MovingAverageRollingStdPredictor
 from predictors.RandomForestPredictor import RandomForestPredictor
+from predictors.WeekOverWeekPredictor import WeekOverWeekPredictor
 
 FILE_NAME = 'data/train.csv'#'train/54e8a140f6237526.csv'
 # Read file
@@ -17,7 +18,7 @@ ids_data = Util.file_name_to_ids_datas(FILE_NAME)
 print(f'Read file {FILE_NAME} in {time.time() - start_time}s')
 #%%
 # CHOOSE PREDICTOR
-predictor = MovingAveragePredictor(50, 5)
+predictor = WeekOverWeekPredictor(long_term_width=60*24,season_widths=[60*24],sigma=1.96)
 # TODO Add per-id functionality to all predict  ors, or move it inside for moving average predictor
 # Predict
 start_time = time.time();
