@@ -21,16 +21,18 @@ class WeekOverWeekPredictor(Predictor):
     def fit(self):
         return
 
-    #TODO : make it work hombre
     def predict(self, datas):
         predictions = {}
         i = 0
         for id in datas:
 
+            # if id != '046ec29ddf80d62e':  # To focus on one id
+            #     continue
             data = datas[id]
             values = data['value'].values
             timestamps = data['timestamp'].values
             period_in_minutes = (timestamps[1]-timestamps[0])/60
+            print(period_in_minutes)
             # labels = data['label']
             long_term_width_in_index = int(self.long_term_width//period_in_minutes)
             seasonal_widths_in_index = list(map(int,self.season_widths//period_in_minutes))
@@ -43,16 +45,15 @@ class WeekOverWeekPredictor(Predictor):
 
 
             noise = self.get_no_seasonal_components(no_long_term_component, seasonal_widths_in_index)
-
+            noise = pd.Series(noise)
+            plt.plot(values, label='values')
             plt.plot(long_term_component, label='long_term_component')
             plt.plot(no_long_term_component, label='no_long_term_component')
             plt.plot(noise, label='noise')
             plt.legend()
-            print(id)
             plt.show()
 
             std = np.std(noise)
-
             predictions[id] = pd.Series(abs(noise) > std * self.sigma)
         return predictions
     def get_no_seasonal_components(self, no_long_term_component, seasonal_widths_in_index):
