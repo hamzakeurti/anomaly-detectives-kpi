@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from dateutil import tz
 
+
+TRAIN_PATH="data/train.csv"
+TEST_PATH="data/test.csv"
 # Separate file content by ids
 def file_content_to_ids_data(file_content):
     unique_ids = pd.unique(file_content['KPI ID'])
@@ -55,3 +58,10 @@ def timestamp_to_datetime(timestamp):
     utc = datetime.utcfromtimestamp(timestamp).replace(tzinfo=tz.gettz('UTC'))
     china = utc.astimezone(tz.gettz('Asia/Shanghai'))
     return china
+
+def load_train(train_path=TRAIN_PATH):
+    return pd.read_csv(train_path)
+
+def load_test(test_path=TEST_PATH):
+    return pd.read_csv(test_path)
+
