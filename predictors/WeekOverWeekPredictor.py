@@ -1,12 +1,12 @@
-from predictors.PredictorTemplate import Predictor
+from PredictorTemplate import Predictor
 import pandas as pd
 import numpy as np
 from operator import add
 import matplotlib.pyplot as plt
 import operator
 
-#TODO Maybe use median rather than average for the moving average
-#TODO make season width expressible in minutes rather than index
+#TODO preprocess data : insert missing timestamps
+#TODO preprocessor: do smart stuff with labels
 class WeekOverWeekPredictor(Predictor):
     def __init__(self, long_term_width, season_widths, sigma):
         """
@@ -23,39 +23,68 @@ class WeekOverWeekPredictor(Predictor):
 
     def predict(self, datas):
         predictions = {}
-        i = 0
         for id in datas:
 
-            # if id != '046ec29ddf80d62e':  # To focus on one id
-            #     continue
-            data = datas[id]
-            values = data['value'].values
-            timestamps = data['timestamp'].values
-            period_in_minutes = (timestamps[1]-timestamps[0])/60
-            print(period_in_minutes)
+        #     # if id != '046ec29ddf80d62e':  # To focus on one id
+        #     #     continue
+        #     data = datas[id]
+        #     values = data['value'].values
+        #     timestamps = data['timestamp'].values
+        #     timestamps_preprocessed = np.copy(timestamps)
+        #     values_preprocessed = np.copy(values)
+        #     inserted_indices = [] #Will store the indices of the insert values in the preprocessed list
+        #
+        #     for i, (current_ts, current_value) in enumerate(zip(timestamps_preprocessed[:-1], values_preprocessed[:-1])): #Iterate over list while it's being edited
+        #         next_ts = timestamps[i+1]
+        #         nominal_period = timestamps[1]-timestamps[0]
+        #         real_period = timestamps[i+1] - timestamps[i]
+        #         if real_period != nominal_period:
+        #             nb_points_to_insert = real_period/nominal_period - 1
+        #             nb_points_to_inserts.append(nb_points_to_insert)
+        # print(sorted(nb_points_to_inserts))
+        # print(sum(nb_points_to_inserts))
+        # True
+                # if real_period != nominal_period:
+                    # if real_period/nominal_period % 1 == 0:
+                    #     nb_points_to_insert = real_period/nominal_period - 1
+                    #     print("Missing time point: from %s to %s, \ndifference is %s and should be %s\n inserting %s points" \
+                    #           %(current_ts, next_ts, real_period, nominal_period,nb_points_to_insert))
+                    # else:
+                    #     raise Exception("Nb points to insert not whole number.")
+                    #
+                    # times_to_insert = [current_ts + i*nominal_period for i in range(1,nb_points_to_insert+1)]
+                    # values_to_insert = np.interp(times_to_insert,[current_ts, next_ts],[values[i], values[i+1]])
+                    # np.insert(timestamps,i,times_to_insert)
+                    # np.insert(values,i,times_to_insert)
+            #
+            # period_in_minutes = (timestamps[1]-timestamps[0])/60
+            # print(period_in_minutes)
             # labels = data['label']
-            long_term_width_in_index = int(self.long_term_width//period_in_minutes)
-            seasonal_widths_in_index = list(map(int,self.season_widths//period_in_minutes))
-
-            to_convolve = np.ones(long_term_width_in_index) / long_term_width_in_index
+            df = datas[id]
+            period = df.minute[1]-df.minute[0]
+            values = df['value'].values
+            long_term_width_index = int(self.long_term_width/period)
+            season_widths_index = [int(i/period) for i in self.season_widths]
+            to_convolve = np.ones(long_term_width_index) / long_term_width_index
             long_term_component = np.convolve(values, to_convolve, 'same')
 
             no_long_term_component = np.subtract(values,long_term_component)
 
 
 
-            noise = self.get_no_seasonal_components(no_long_term_component, seasonal_widths_in_index)
+            noise = self.get_no_seasonal_components(no_long_term_component, season_widths_index)
             noise = pd.Series(noise)
             plt.plot(values, label='values')
             plt.plot(long_term_component, label='long_term_component')
             plt.plot(no_long_term_component, label='no_long_term_component')
             plt.plot(noise, label='noise')
             plt.legend()
-            plt.show()
+            #plt.show()
 
             std = np.std(noise)
             predictions[id] = pd.Series(abs(noise) > std * self.sigma)
         return predictions
+
     def get_no_seasonal_components(self, no_long_term_component, seasonal_widths_in_index):
         seasonal_components = np.zeros(len(no_long_term_component))
         most_deseasoned_so_far = no_long_term_component

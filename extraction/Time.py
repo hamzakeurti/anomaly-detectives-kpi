@@ -1,5 +1,13 @@
 import datetime
+import os
+import pickle
+
 import pandas as pd
+
+pd.options.mode.chained_assignment = None  # THis to ignore the SettingWithCopyWarning (https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas)
+
+TRAIN_BEEFED_PICKLE_PATH = "data/train_beefed.p"
+
 
 def format_timestamp(dataframe):
     """Convert timestamp column to datetime object.
@@ -9,24 +17,25 @@ def format_timestamp(dataframe):
 
 def extract_seasonal_time(dataframe):
     """Adds columns:
-    minute (minutes of the day 0 to 60*24)
+    minute (minutes of the day 0 to 60*24-1)
     and day (day of the week 0 to 6).
     Input dataframe should have timestamp column in datetime format,
     Use format_timestamp(dataframe)"""
-    dataframe["minute"] = dataframe.timestamp.apply(lambda x: x.minute + 60*x.hour)
+    dataframe["minute"] = dataframe.timestamp.apply(lambda x: x.minute + 60 * x.hour)
     dataframe["day"] = dataframe.timestamp.apply(lambda x: x.weekday())
 
+
+# TODO probs move this out of Time file, into util
 def split_on_id(dataframe):
     """Returns a dictionary of dataframes for each id."""
     grouped_df = dataframe.groupby("KPI ID")
-    return {x:grouped_df.get_group(x) for x in grouped_df.groups}
+    return {x: grouped_df.get_group(x) for x in grouped_df.groups}
 
 
 def fill_nas(single_KPI):
     """Pass a single KPI in, which timestamps column is already converted to datetime format"""
-    #We need minutes column to proceed.
+    # We need minutes column to proceed.
     extract_seasonal_time(single_KPI)
-
 
     single_KPI.index = pd.DatetimeIndex(single_KPI.timestamp)
 
@@ -36,28 +45,47 @@ def fill_nas(single_KPI):
 
     indices = pd.date_range(start, end, freq=gap)
 
+    single_KPI["imputed"] = 0 #Whether or not the row is imputed
     single_KPI = single_KPI.reindex(indices)
-    values_replace_na ={
-        "KPI ID":single_KPI["KPI ID"].iloc[0],
-        "label":0
+    values_replace_na = {
+        "KPI ID": single_KPI["KPI ID"].iloc[0],
+        "label": 0,
+        "imputed": 1
     }
     single_KPI = single_KPI.fillna(values_replace_na)
 
-    #Let's fill the value column now!
-    #For each missing value at minute i of the day,
-    #we will use the mean over all available values at same minute of different days
-    #Note: we need times
+    # Let's fill the value column now!
+    # For each missing value at minute i of the day,
+    # we will use the mean over all available values at same minute of different days
+    # Note: we need times
     means = single_KPI.groupby(["minute"])["value"].describe()["mean"]
+    #assert len(means)*gap.minute + gap.hour*60 == 60*24 # Check if we have a value for each minute of the day
     single_KPI.timestamp = single_KPI.index
-    na_KPI = single_KPI[single_KPI.minute != single_KPI.minute]
-    new_values = na_KPI.timestamp.apply(lambda x:means[means.index == x.minute].values[0])
+    na_KPI = single_KPI[single_KPI.imputed == 1]
+    new_values = na_KPI.timestamp.apply(lambda x: means[means.index == x.minute].values[0])
     single_KPI.value = single_KPI.value.fillna(new_values)
     extract_seasonal_time(single_KPI)
     return single_KPI
 
-def preprocess(raw_dataframe):
-    format_timestamp(raw_dataframe)
-    ids_data = split_on_id(raw_dataframe)
-    for KPI_id,df in ids_data.items():
-        ids_data[KPI_id] = fill_nas(df)
-    return ids_data
+
+def preprocess(raw_dataframe, train_beefed_pickle_path=TRAIN_BEEFED_PICKLE_PATH, refreshPickle=False):
+    if (not os.path.exists(TRAIN_BEEFED_PICKLE_PATH)) or refreshPickle:
+        format_timestamp(raw_dataframe)
+        beefed_data = split_on_id(raw_dataframe)
+        for KPI_id, df in beefed_data.items():
+            print(KPI_id)
+            beefed_data[KPI_id] = fill_nas(df)
+        pickle.dump(beefed_data, open(train_beefed_pickle_path, "wb"))
+    else:
+        beefed_data = pickle.load(open(train_beefed_pickle_path, "rb"))
+    return beefed_data
+
+
+def remove_imputed_samples(ids_predictions, beefed_data):
+    for id in ids_predictions:
+        pred = ids_predictions[id]
+        imputed = beefed_data[id].imputed
+        both = list(zip(pred,imputed))
+        unbeefed = [pr for (pr, im) in both if not im]
+        ids_predictions[id] = pd.Series(unbeefed)
+    return ids_predictions
