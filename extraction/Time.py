@@ -13,8 +13,8 @@ def format_timestamp(dataframe):
     """Convert timestamp column to datetime object.
     Input dataframe should have timestamp column in int format."""
     dataframe.timestamp = dataframe.timestamp.apply(lambda x: datetime.datetime.fromtimestamp(x))
-
-
+ 
+    
 def extract_seasonal_time(dataframe):
     """Adds columns:
     minute (minutes of the day 0 to 60*24-1)
@@ -23,7 +23,7 @@ def extract_seasonal_time(dataframe):
     Use format_timestamp(dataframe)"""
     dataframe["minute"] = dataframe.timestamp.apply(lambda x: x.minute + 60 * x.hour)
     dataframe["day"] = dataframe.timestamp.apply(lambda x: x.weekday())
-
+    dataframe["minute_of_week"] = dataframe.minute + 60*24*dataframe.day
 
 # TODO probs move this out of Time file, into util
 def split_on_id(dataframe):
@@ -32,11 +32,11 @@ def split_on_id(dataframe):
     return {x: grouped_df.get_group(x) for x in grouped_df.groups}
 
 
-def fill_nas(single_KPI):
+def fill_nas(single_KPI,not_anomaly=False,period = "week"):
     """Pass a single KPI in, which timestamps column is already converted to datetime format"""
     # We need minutes column to proceed.
     extract_seasonal_time(single_KPI)
-
+        
     single_KPI.index = pd.DatetimeIndex(single_KPI.timestamp)
 
     start = single_KPI.head(1).timestamp.iloc[0]
@@ -55,14 +55,27 @@ def fill_nas(single_KPI):
     single_KPI = single_KPI.fillna(values_replace_na)
 
     # Let's fill the value column now!
-    # For each missing value at minute i of the day,
-    # we will use the mean over all available values at same minute of different days
+    # For each missing value at minute i of the week,
+    # we will use the mean over all available values at same minute of different weeks
     # Note: we need times
-    means = single_KPI.groupby(["minute"])["value"].describe()["mean"]
+    groupby_column = ""
+    if period == "day":
+        groupby_column = "minute"
+    if period == "week":
+        groupby_column = "minute_of_week"
+    
+    if not_anomaly:#We can choose to only consider non anomalous values in the computing of means.
+        means = single_KPI[single_KPI.label == 0].groupby([groupby_column])["value"].mean()
+    else:#We cannot select non anomalous during testing. (TODO: In case of testing fill with means from training)
+        means = single_KPI.groupby([groupby_column])["value"].mean()
+
     #assert len(means)*gap.minute + gap.hour*60 == 60*24 # Check if we have a value for each minute of the day
     single_KPI.timestamp = single_KPI.index
     na_KPI = single_KPI[single_KPI.imputed == 1]
-    new_values = na_KPI.timestamp.apply(lambda x: means[means.index == x.minute].values[0])
+    
+    
+    
+    new_values = na_KPI[groupby_column].apply(lambda x: means[x])
     single_KPI.value = single_KPI.value.fillna(new_values)
     extract_seasonal_time(single_KPI)
     return single_KPI
