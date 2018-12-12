@@ -12,7 +12,7 @@ TRAIN_PATH = "data/train.csv"
 TEST_PATH = "data/test.csv"
 TRAIN_RAW_PICKLE_PATH = "data/train_raw.p"
 TEST_PICKLE_PATH = "data/test.p"
-LOG_PATH = "results/logs"
+LOG_DIR = "results/logs/"
 
 
 # Separate file content by ids
@@ -94,7 +94,7 @@ def get_logger():
     logger = logging.getLogger('logger')
     logger.setLevel(logging.DEBUG)
     logging.basicConfig(format='%(message)s', level=logging.DEBUG)
-    handler = logging.FileHandler(LOG_PATH)
+    handler = logging.FileHandler(LOG_DIR + datetime.now().strftime('log_%Y_%m_%d_%H_%M_%S.log'))
     handler.setLevel(logging.DEBUG)
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s: %(message)s'))
     logging.getLogger().addHandler(handler)

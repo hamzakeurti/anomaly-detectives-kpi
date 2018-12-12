@@ -46,13 +46,14 @@ def main():
     unbeefed_test_data = load_test()
     logger.info('Loaded data in % s seconds' % (time.time() - start_time))
     start_time = time.time()
-    beefed_train_data = Time.preprocess(unbeefed_train_data)
-    beefed_test_data = Time.preprocess(unbeefed_test_data)
+    beefed_train_data = Time.preprocess_train(unbeefed_train_data,refreshPickle=True)
+    beefed_test_data = Time.preprocess_test(unbeefed_test_data,refreshPickle=True)
     logger.info('Loaded preprocessed data in % s seconds' % (time.time() - start_time))
 
     # %%
     # CHOOSE PREDICTOR
     predictor = WeekOverWeekPredictor(long_term_width=60 * 24*7, season_widths=[60*24*7], sigma=3)
+    logger.info('Using predictor %s %s' % (str(predictor.__class__), str(predictor.__dict__)))
     # Predict
     start_time = time.time();
     # only_one_kpi = {'9bd90500bfd11edb': beefed_data['9bd90500bfd11edb']}
@@ -60,7 +61,7 @@ def main():
     #beefed_predictions = predictor.predict(noise)
     beefed_predictions = predictor.predict(beefed_train_data)
     unbeefed_predictions = Time.remove_imputed_samples(beefed_predictions, beefed_train_data)
-    print(f'Made predictions in {time.time() - start_time}s')
+    logger.info(f'Made predictions in {time.time() - start_time}s')
 
     # %%
     # Get anomalies using moving averages
@@ -81,7 +82,7 @@ def main():
         # Util.draw_graph(raw_data_per_id[id][:], adjusted_predictions[:])
         # precision, recall, fscore = Analyze.analyze_per_id({id: ids_data[id]}, {id: adjusted_predictions})
         precision, recall, fscore = Analyze.analyze(raw_data_per_id[id], adjusted_predictions)
-        print(f'{id}: precision = {precision}, recall = {recall}, f-score = {fscore}')
+        logger.info(f'{id}: precision = {precision}, recall = {recall}, f-score = {fscore}')
 
     #plt.show()
 

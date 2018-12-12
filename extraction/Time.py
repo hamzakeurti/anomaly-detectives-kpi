@@ -7,6 +7,7 @@ import pandas as pd
 pd.options.mode.chained_assignment = None  # THis to ignore the SettingWithCopyWarning (https://stackoverflow.com/questions/20625582/how-to-deal-with-settingwithcopywarning-in-pandas)
 
 TRAIN_BEEFED_PICKLE_PATH = "data/train_beefed.p"
+TEST_BEEFED_PICKLE_PATH = "data/test_beefed.p"
 
 
 def format_timestamp(dataframe):
@@ -81,16 +82,29 @@ def fill_nas(single_KPI,not_anomaly=False,period = "week"):
     return single_KPI
 
 
-def preprocess(raw_dataframe, train_beefed_pickle_path=TRAIN_BEEFED_PICKLE_PATH, refreshPickle=False):
+def preprocess_train(raw_dataframe, train_beefed_pickle_path=TRAIN_BEEFED_PICKLE_PATH, refreshPickle=False):
     if (not os.path.exists(TRAIN_BEEFED_PICKLE_PATH)) or refreshPickle:
         format_timestamp(raw_dataframe)
         beefed_data = split_on_id(raw_dataframe)
         for KPI_id, df in beefed_data.items():
             print(KPI_id)
-            beefed_data[KPI_id] = fill_nas(df)
+            beefed_data[KPI_id] = fill_nas(df,not_anomaly=True)
         pickle.dump(beefed_data, open(train_beefed_pickle_path, "wb"))
     else:
         beefed_data = pickle.load(open(train_beefed_pickle_path, "rb"))
+    return beefed_data
+
+
+def preprocess_test(raw_dataframe, test_beefed_pickle_path=TEST_BEEFED_PICKLE_PATH, refreshPickle=False):
+    if (not os.path.exists(TEST_BEEFED_PICKLE_PATH)) or refreshPickle:
+        format_timestamp(raw_dataframe)
+        beefed_data = split_on_id(raw_dataframe)
+        for KPI_id, df in beefed_data.items():
+            print(KPI_id)
+            beefed_data[KPI_id] = fill_nas(df, not_anomaly=False)
+        pickle.dump(beefed_data, open(test_beefed_pickle_path, "wb"))
+    else:
+        beefed_data = pickle.load(open(test_beefed_pickle_path, "rb"))
     return beefed_data
 
 
