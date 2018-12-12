@@ -74,12 +74,13 @@ class WeekOverWeekPredictor(Predictor):
 
             noise = self.get_no_seasonal_components(no_long_term_component, season_widths_index)
             noise = pd.Series(noise)
-            plt.plot(values, label='values')
-            plt.plot(long_term_component, label='long_term_component')
-            plt.plot(no_long_term_component, label='no_long_term_component')
-            plt.plot(noise, label='noise')
-            plt.legend()
-            #plt.show()
+
+            # plt.plot(values, label='values')
+            # plt.plot(long_term_component, label='long_term_component')
+            # plt.plot(no_long_term_component, label='no_long_term_component')
+            # plt.plot(noise, label='noise')
+            # plt.legend()
+            # plt.show()
 
             std = np.std(noise)
             predictions[id] = pd.Series(abs(noise) > std * self.sigma)
@@ -88,7 +89,6 @@ class WeekOverWeekPredictor(Predictor):
     def get_no_seasonal_components(self, no_long_term_component, seasonal_widths_in_index):
         seasonal_components = np.zeros(len(no_long_term_component))
         most_deseasoned_so_far = no_long_term_component
-
         #To be correct, remove trends from big to small
         for sw in sorted(seasonal_widths_in_index,reverse=True):
             nb_seasons = len(no_long_term_component) // sw
@@ -99,7 +99,7 @@ class WeekOverWeekPredictor(Predictor):
             # Expand season averages to length of values
             season_averages = np.tile(season_averages,nb_seasons+1)[:len(no_long_term_component)]
 
-            plt.plot(season_averages, label='season_averages for season width %s' % sw)
+            # plt.plot(season_averages, label='season_averages for season width %s' % sw)
             most_deseasoned_so_far = list(map(operator.sub, most_deseasoned_so_far, season_averages))
         return most_deseasoned_so_far
 
