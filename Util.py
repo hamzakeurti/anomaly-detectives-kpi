@@ -1,3 +1,4 @@
+import logging
 import pickle
 import time
 
@@ -11,6 +12,7 @@ TRAIN_PATH = "data/train.csv"
 TEST_PATH = "data/test.csv"
 TRAIN_RAW_PICKLE_PATH = "data/train_raw.p"
 TEST_PICKLE_PATH = "data/test.p"
+LOG_DIR = "results/logs/"
 
 
 # Separate file content by ids
@@ -72,24 +74,28 @@ def timestamp_to_datetime(timestamp):
 
 
 def load_train(train_path=TRAIN_PATH, train_raw_pickle_path=TRAIN_RAW_PICKLE_PATH, refreshPickle=False):
-    start_time = time.time()
     if (not os.path.exists(train_raw_pickle_path)) or refreshPickle:
         raw_data = pd.read_csv(train_path)
-        print(f'Read file {train_path} in {time.time() - start_time}s')
         pickle.dump(raw_data, open(train_raw_pickle_path, "wb"))
     else:
         raw_data = pickle.load(open(train_raw_pickle_path, "rb"))
-        print(f'Loaded pickle {TRAIN_RAW_PICKLE_PATH} in {time.time() - start_time}s')
     return raw_data
 
 
 def load_test(test_path=TEST_PATH, test_pickle_path=TEST_PICKLE_PATH, refreshPickle=False):
-    start_time = time.time()
     if (not os.path.exists(test_pickle_path)) or refreshPickle:
         data = pd.read_csv(test_path)
-        print(f'Read file {test_path} in {time.time() - start_time}s')
         pickle.dump(data, open(test_pickle_path, "wb"))
     else:
         data = pickle.load(open(test_pickle_path, "rb"))
-        print(f'Loaded pickle in {TEST_PICKLE_PATH} in {time.time() - start_time}s')
     return data
+
+def get_logger():
+    logger = logging.getLogger('logger')
+    logger.setLevel(logging.DEBUG)
+    logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+    handler = logging.FileHandler(LOG_DIR + datetime.now().strftime('log_%Y_%m_%d_%H_%M_%S.log'))
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s: %(message)s'))
+    logging.getLogger().addHandler(handler)
+    return logger

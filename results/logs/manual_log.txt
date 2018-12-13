@@ -1,0 +1,27 @@
+Sigma 7
+02e99bd4f6cfb33f: precision = 1.0, recall = 0.08824644549763033, f-score = 0.16218099468687397
+9bd90500bfd11edb: precision = 0, recall = 0.0, f-score = 0
+da403e4e3f87c9e0: precision = 1.0, recall = 0.1144012522828072, f-score = 0.20531429240313706
+a5bf5d65261d859a: precision = 0.08656716417910448, recall = 1.0, f-score = 0.15934065934065933
+18fbb1d5a5dc099d: precision = 1.0, recall = 0.02543558438255119, f-score = 0.04960932655339204
+09513ae3e75778a3: precision = 0, recall = 0.0, f-score = 0
+c58bfcbacb2822d1: precision = 0, recall = 0.0, f-score = 0
+1c35dbf57f55f5e4: precision = 0.5373134328358209, recall = 0.003757436593257489, f-score = 0.00746268656716418
+046ec29ddf80d62e: precision = 0, recall = 0.0, f-score = 0
+07927a9a18fa19ae: precision = 0, recall = 0.0, f-score = 0
+54e8a140f6237526: precision = 0, recall = 0.0, f-score = 0
+b3b2e6d1a791d63a: precision = 0.8571428571428571, recall = 0.5, f-score = 0.631578947368421
+8a20c229e9860d0c: precision = 0, recall = 0.0, f-score = 0
+769894baefea4e9e: precision = 0, recall = 0.0, f-score = 0
+76f4550c43334374: precision = 0, recall = 0.0, f-score = 0
+e0770391decc44ce: precision = 0, recall = 0.0, f-score = 0
+8c892e5525f3e491: precision = 1.0, recall = 0.0029192345118391177, f-score = 0.005821474773609314
+40e25005ff8992bd: precision = 1.0, recall = 0.1819571865443425, f-score = 0.3078913324708926
+cff6d3c01e6a6bfa: precision = 1.0, recall = 0.1655933762649494, f-score = 0.28413575374901345
+71595dd7171f4540: precision = 1.0, recall = 0.12578616352201258, f-score = 0.223463687150838
+7c189dd36f048a6c: precision = 1.0, recall = 0.4014084507042254, f-score = 0.5728643216080401
+a40b1df87e3f1c87: precision = 1.0, recall = 0.5039370078740157, f-score = 0.6701570680628273
+8bef9af9a922e0b3: precision = 1.0, recall = 0.24667931688804554, f-score = 0.3957382039573821
+affb01ca2b4f0b45: precision = 1.0, recall = 0.2825342465753425, f-score = 0.4405874499332444
+9ee5879409dccef9: precision = 1.0, recall = 0.003395585738539898, f-score = 0.00676818950930626
+88cf3a776ba00e7c: precision = 0, recall = 0.0, f-score = 0
