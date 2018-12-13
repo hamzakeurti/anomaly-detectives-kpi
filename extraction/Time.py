@@ -9,6 +9,15 @@ pd.options.mode.chained_assignment = None  # THis to ignore the SettingWithCopyW
 TRAIN_BEEFED_PICKLE_PATH = "data/train_beefed.p"
 TEST_BEEFED_PICKLE_PATH = "data/test_beefed.p"
 
+# Column names
+KPI_ID = "KPI ID"
+VALUE = "value"
+MINUTE = "minute"
+DAY = "day"
+MINUTE_OF_WEEK = "minute_of_week"
+LABEL = "label"
+IMPUTED = "imputed"
+
 
 def format_timestamp(dataframe):
     """Convert timestamp column to datetime object.
@@ -22,15 +31,15 @@ def extract_seasonal_time(dataframe):
     and day (day of the week 0 to 6).
     Input dataframe should have timestamp column in datetime format,
     Use format_timestamp(dataframe)"""
-    dataframe["minute"] = get_minute_of_day_column(dataframe.timestamp)
-    dataframe["day"] = get_day_of_week_column(dataframe.timestamp)
-    dataframe["minute_of_week"] = dataframe.minute + 60 * 24 * dataframe.day
+    dataframe[MINUTE] = get_minute_of_day_column(dataframe.timestamp)
+    dataframe[DAY] = get_day_of_week_column(dataframe.timestamp)
+    dataframe[MINUTE_OF_WEEK] = dataframe.minute + 60 * 24 * dataframe.day
 
 
 # TODO probs move this out of Time file, into util
 def split_on_id(dataframe):
     """Returns a dictionary of dataframes for each id."""
-    grouped_df = dataframe.groupby("KPI ID")
+    grouped_df = dataframe.groupby(KPI_ID)
     return {x: grouped_df.get_group(x) for x in grouped_df.groups}
 
 
@@ -55,12 +64,12 @@ def fill_nas(single_KPI, not_anomaly=False):
 
     indices = pd.date_range(start, end, freq=gap)
 
-    single_KPI["imputed"] = 0  # Whether or not the row is imputed
+    single_KPI[IMPUTED] = 0  # Whether or not the row is imputed
     single_KPI = single_KPI.reindex(indices)
     values_replace_na = {
-        "KPI ID": single_KPI["KPI ID"].iloc[0],
-        "label": 0,
-        "imputed": 1
+        KPI_ID: single_KPI[KPI_ID].iloc[0],
+        LABEL: 0,
+        IMPUTED: 1
     }
     single_KPI = single_KPI.fillna(values_replace_na)
 
@@ -70,21 +79,21 @@ def fill_nas(single_KPI, not_anomaly=False):
     # Note: we need times
 
     if not_anomaly:  # We can choose to only consider non anomalous values in the computing of means.
-        means = single_KPI[single_KPI.label == 0].groupby(["minute"])["value"].mean()
+        means = single_KPI[single_KPI.label == 0].groupby([MINUTE])[VALUE].mean()
     else:  # We cannot select non anomalous during testing. (TODO: In case of testing fill with means from training)
-        means = single_KPI.groupby(["minute"])["value"].mean()
+        means = single_KPI.groupby([MINUTE])[VALUE].mean()
 
     # assert len(means)*gap.minute + gap.hour*60 == 60*24 # Check if we have a value for each minute of the day
     single_KPI.timestamp = single_KPI.index
     na_KPI = single_KPI[single_KPI.imputed == 1]
     extract_seasonal_time(na_KPI)
 
-    new_values = na_KPI["minute"].apply(lambda x: means[x])
+    new_values = na_KPI[MINUTE].apply(lambda x: means[x])
     values_replace_na = {
-        "value": new_values,
-        "minute": na_KPI.minute.values,
-        "day": na_KPI.day.values,
-        "minute_of_week": na_KPI.minute_of_week
+        VALUE: new_values,
+        MINUTE: na_KPI.minute.values,
+        DAY: na_KPI.day.values,
+        MINUTE_OF_WEEK: na_KPI.minute_of_week
     }
     single_KPI.value = single_KPI.value.fillna(new_values)
     return single_KPI
@@ -96,7 +105,7 @@ def preprocess_train(raw_dataframe, train_beefed_pickle_path=TRAIN_BEEFED_PICKLE
         beefed_data = split_on_id(raw_dataframe)
         for KPI_id, df in beefed_data.items():
             print(KPI_id)
-            beefed_data[KPI_id] = fill_nas(df,not_anomaly=True)
+            beefed_data[KPI_id] = fill_nas(df, not_anomaly=True)
         pickle.dump(beefed_data, open(train_beefed_pickle_path, "wb"))
     else:
         beefed_data = pickle.load(open(train_beefed_pickle_path, "rb"))
