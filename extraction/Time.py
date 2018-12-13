@@ -108,7 +108,7 @@ def preprocess_test(raw_dataframe, test_beefed_pickle_path=TEST_BEEFED_PICKLE_PA
     return beefed_data
 
 
-def remove_imputed_samples(ids_predictions, beefed_data):
+def remove_imputed_predictions(ids_predictions, beefed_data):
     for id in ids_predictions:
         pred = ids_predictions[id]
         imputed = beefed_data[id].imputed

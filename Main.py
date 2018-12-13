@@ -6,15 +6,17 @@ import Analyze
 import time
 import matplotlib.pyplot as plt
 import matplotlib
+
+from extraction import Time
 from predictors.MovingAveragePredictor import MovingAveragePredictor
 from predictors.MovingAverageRollingStdPredictor import MovingAverageRollingStdPredictor
 from predictors.RandomForestPredictor import RandomForestPredictor
 from predictors.WeekOverWeekPredictor import WeekOverWeekPredictor
 from Util import *
-from extraction import Time
+from extraction.Time import *
 # matplotlib.use('Qt5Agg')
 import pickle
-from visualization import visualize
+from visualization.visualize import *
 
 def main():
     # TODO make predictor return unbeefed
@@ -43,6 +45,15 @@ def main():
     logger = get_logger()
     start_time = time.time()
     unbeefed_train_data = load_train()
+
+
+    split = split_on_id(unbeefed_train_data)
+    for KPI_id, df in split.items():
+        print(KPI_id)
+        split[KPI_id] = df
+        visualize_anomalies(df.timestamp.values, df.value.values, df.label.values)
+
+
     unbeefed_test_data = load_test()
     logger.info('Loaded data in % s seconds' % (time.time() - start_time))
     start_time = time.time()
@@ -60,7 +71,7 @@ def main():
     #noise, season_components, long_term_component = hamzasExtractor(beefed_data)
     #beefed_predictions = predictor.predict(noise)
     beefed_predictions = predictor.predict(beefed_train_data)
-    unbeefed_predictions = Time.remove_imputed_samples(beefed_predictions, beefed_train_data)
+    unbeefed_predictions = Time.remove_imputed_predictions(beefed_predictions, beefed_train_data)
     logger.info(f'Made predictions in {time.time() - start_time}s')
 
     # %%
@@ -90,7 +101,7 @@ def main():
     #%% predict test data
 
     beefed_test_predictions = predictor.predict(beefed_test_data)
-    unbeefed_predictions = Time.remove_imputed_samples(beefed_test_predictions, beefed_test_data)
+    unbeefed_predictions = Time.remove_imputed_predictions(beefed_test_predictions, beefed_test_data)
 
 
 if __name__ == '__main__':
