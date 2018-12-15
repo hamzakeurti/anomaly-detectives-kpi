@@ -100,7 +100,8 @@ def fill_nas(single_KPI, not_anomaly=False):
 
 
 def preprocess_train(raw_dataframe, train_beefed_pickle_path=TRAIN_BEEFED_PICKLE_PATH, refreshPickle=False):
-    if (not os.path.exists(TRAIN_BEEFED_PICKLE_PATH)) or refreshPickle:
+    if (not os.path.exists(train_beefed_pickle_path)) or refreshPickle:
+        print("fgdsgdge", train_beefed_pickle_path)
         format_timestamp(raw_dataframe)
         beefed_data = split_on_id(raw_dataframe)
         for KPI_id, df in beefed_data.items():
