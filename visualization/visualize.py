@@ -64,21 +64,20 @@ def load_visualization_anomalies(kpi_id,imputed=False):
 def visualize_anomalies(timestamp, values, labels):
     """plots KPI with a highlight of anomalies
     """
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(20, 10))
     colors = ['blue', 'red']
     ax.scatter(timestamp, values,
                marker='.',
                c=labels, cmap=clr.ListedColormap(colors))
-    plt.show()
-
+    return fig
 
 def visualize_classification(timestamp, values, labels, prediction):
     """plots KPI curve with highlight of TN TP FN FP
     """
     classification = 2 * prediction + labels
-    fig, ax = plt.subplots(figsize=(10, 5))
-    colors = ['black', 'red', 'orange', 'green']
+    fig, ax = plt.subplots(figsize=(20, 10))
+    colors = ['blue', 'green', 'orange', 'red']
     ax.scatter(timestamp, values,
                marker='.',
                c=classification, cmap=clr.ListedColormap(colors))
-    plt.show()
+    return fig

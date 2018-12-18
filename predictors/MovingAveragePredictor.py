@@ -10,19 +10,12 @@ class MovingAveragePredictor(Predictor):
     def fit(self):
         return
 
-    def predict(self, datas):
-        predictions = {}
-        i = 0
-        for id in datas:
-            data = datas[id]
-            values = data['value']
-            timestamps = data['timestamp']
-            labels = data['label']
-            
-            window = np.ones(self.width) / self.width
-            avgs = np.convolve(values, window, 'same')
-            devs = values - avgs
-            std = np.std(devs)
-            
-            predictions[id] = pd.Series(abs(devs) > std * self.sigma)
-        return predictions
+    def predict(self, data):
+        values = data.value.values
+        
+        window = np.ones(self.width) / self.width
+        avgs = np.convolve(values, window, 'same')
+        devs = values - avgs
+        std = np.std(devs)
+        
+        return pd.Series(abs(devs) > std * self.sigma)

@@ -5,14 +5,14 @@ def data_to_sections(data):
     start = 0
     prev = 0
     for i in range(len(data)):
-        curr = data['label'][i]
+        curr = data.label.values[i]
         if curr:
             if not prev:
                 start = i
         else:
             if prev:
                 sections.append([start, i])
-        prev = data['label'][i]
+        prev = data.label.values[i]
     return sections
 
 def adjust_prediction(prediction, sections, T):
@@ -28,18 +28,11 @@ def adjust_prediction(prediction, sections, T):
     return adjusted_prediction
 
 def analyze(data, predictions, T=7):
-
-    total_true_positive = 0
-    total_selected = 0
-    total_positive = 0
     sections = data_to_sections(data)
     adjusted_predictions = adjust_prediction(predictions, sections, T)
-    n_true_positive = np.sum(adjusted_predictions & data['label'])
+    n_true_positive = np.sum(adjusted_predictions & data.label.values)
     n_selected = np.sum(adjusted_predictions)
-    n_positive = np.sum(data['label'])
-    total_true_positive  = total_true_positive + n_true_positive
-    total_selected = total_selected + n_selected
-    total_positive = total_positive + n_positive
+    n_positive = np.sum(data.label.values)
     precision = 0
     if n_selected:
         precision = n_true_positive / n_selected
@@ -64,19 +57,19 @@ def analyze_per_id(ids_data, ids_predictions, T=7):
         predictions = ids_predictions[id]
         sections = data_to_sections(data)
         adjusted_predictions = adjust_prediction(predictions, sections, T)
-        n_true_positive = np.sum(adjusted_predictions & data['label'])
+        n_true_positive = np.sum(adjusted_predictions & data.label.values)
         n_selected = np.sum(adjusted_predictions)
-        n_positive = np.sum(data['label'])
+        n_positive = np.sum(data.label.values)
         total_true_positive  = total_true_positive + n_true_positive
         total_selected = total_selected + n_selected
         total_positive = total_positive + n_positive
     
     precision = 0
-    if n_selected:
-        precision = n_true_positive / n_selected
+    if total_selected:
+        precision = total_true_positive / total_selected
     recall = 0
-    if n_positive:
-        recall = n_true_positive / n_positive
+    if total_positive:
+        recall = total_true_positive / total_positive
     fscore = 0
     if precision+recall:
         fscore = 2 * precision * recall / (precision + recall)
