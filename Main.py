@@ -53,7 +53,6 @@ def main():
         split[KPI_id] = df
         visualize_anomalies(df.timestamp.values, df.value.values, df.label.values)
 
-
     unbeefed_test_data = load_test()
     logger.info('Loaded data in % s seconds' % (time.time() - start_time))
     start_time = time.time()
@@ -76,7 +75,7 @@ def main():
 
     # %%
     # Get anomalies using moving averages
-    raw_data_per_id = file_content_to_ids_data(unbeefed_train_data)
+    raw_data_per_id = split_on_id(unbeefed_train_data)
     for id in raw_data_per_id:
         # if id != '9bd90500bfd11edb':  # To focus on one id
         #     continue

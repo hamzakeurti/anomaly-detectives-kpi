@@ -1,5 +1,5 @@
 import pandas as pd
-
+import statsmodels
 
 MINUTE_FROM_START = "minute_from_start"
 
@@ -15,7 +15,7 @@ def extract_big_trend(single_KPI,window_width_minutes=1440*7):
     #TODO:We might want to complete the dataframe to the left and to the right with an average week.
 
     single_KPI["big_trend"] = \
-        single_KPI.values.rolling_mean(window=window_size)
+        single_KPI.value.rolling_mean(window=window_size)
     single_KPI["trend_extracted"] = single_KPI.values - single_KPI["big_trend"]
 
 

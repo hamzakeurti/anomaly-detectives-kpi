@@ -60,7 +60,6 @@ def load_visualization_anomalies(kpi_id,imputed=False):
             return pickle.load(f)
 
 
-#TODO make extra function that uses visualize_anomalies to quickly load figures for each KPI via pickling
 def visualize_anomalies(timestamp, values, labels):
     """plots KPI with a highlight of anomalies
     """
