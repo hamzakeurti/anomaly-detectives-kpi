@@ -38,6 +38,7 @@ def main():
     result_path = 'results/map_pdp'
     if not os.path.isdir(result_path):
         os.makedirs(result_path)
+    df_sum, ta_sum = 0,0
     for id, df in split.items():
         print(id)
         # map = MovingAveragePredictor(10, 10)
@@ -50,9 +51,14 @@ def main():
         # sections = Analyze.data_to_sections(df)
         # adjusted_prediction = Analyze.adjust_prediction(prediction, sections, 7)
         to_append = pd.DataFrame(columns=['KPI ID', 'timestamp', 'predict'])
-        to_append['timestamp'] , to_append['KPI ID'], to_append['predict']  = df.timestamp.values, id, prediction.astype(int).values #pd.DataFrame({'KPI ID':df['KPI ID'], 'timestamp':df.timestamp, 'predict':prediction.astype(int)})
-        submission_df = submission_df.append(to_append)
-
+        to_append['predict'], to_append['timestamp'] , to_append['KPI ID'],  = prediction.astype(int).values, df.timestamp.values, id #pd.DataFrame({'KPI ID':df['KPI ID'], 'timestamp':df.timestamp, 'predict':prediction.astype(int)})
+        submission_df = submission_df.append(to_append,ignore_index=True)
+        print("Df shape: ",df.shape)
+        print("Shape",to_append.shape)
+        df_sum += df.shape[0]
+        ta_sum += to_append.shape[0]
+        print("DF sum so far: ", df_sum)
+        print("ta sum so far: ", ta_sum)
         # precision, recall, fscore = Analyze.analyze(df, prediction, 7)
         # logger.info(f'{id}: precision = {precision}, recall = {recall}, f-score = {fscore}')
         #
@@ -64,7 +70,7 @@ def main():
     
     # precision, recall, fscore = Analyze.analyze_per_id(split, ids_prediction, 7)
     # logger.info(f'total: precision = {precision}, recall = {recall}, f-score = {fscore}')
-
+    print(submission_df.shape)
     submission_df.to_csv('results/submission_%s.csv' % time.time(),index=False)
 
 if __name__ == '__main__':
