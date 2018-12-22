@@ -99,3 +99,17 @@ def get_logger():
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s: %(message)s'))
     logging.getLogger().addHandler(handler)
     return logger
+
+
+def extra_parse(param_list):
+    extra_parsed_list = []
+    for p in param_list:
+        try:
+            ep = int(p)
+        except:
+            try:
+                ep = float(p)
+            except:
+                ep = p
+        extra_parsed_list.append(ep)
+    return extra_parsed_list
