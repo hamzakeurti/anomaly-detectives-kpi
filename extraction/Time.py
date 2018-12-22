@@ -20,13 +20,16 @@ IMPUTED = "imputed"
 
 
 def format_timestamp(dataframe):
-    """Convert timestamp column to datetime object.
-    Input dataframe should have timestamp column in int format."""
+    """
+    Modifies input
+    Convert timestamp column to datetime object.
+    Input dataframe should have timestamp column in int format.
+    """
     dataframe.timestamp = dataframe.timestamp.apply(lambda x: datetime.datetime.fromtimestamp(x))
 
 
 def extract_seasonal_time(dataframe):
-    """Adds columns:
+    """Modifies input. Adds columns:
     minute (minutes of the day 0 to 60*24-1)
     and day (day of the week 0 to 6).
     Input dataframe should have timestamp column in datetime format,
@@ -51,8 +54,11 @@ def get_day_of_week_column(timestamps):
     return timestamps.apply(lambda x: int(x.weekday()))
 
 
-def fill_nas(single_KPI, not_anomaly=False):
-    """Pass a single KPI in, which timestamps column is already converted to datetime format"""
+def fill_nas(single_KPI, ignore_anomaly=False):
+    """
+    :returns filled input.
+    Pass a single KPI in, which timestamps column is already converted to datetime format
+    """
     # We need minutes column to proceed.
     extract_seasonal_time(single_KPI)
 
@@ -78,10 +84,10 @@ def fill_nas(single_KPI, not_anomaly=False):
     # we will use the mean over all available values at same minute of different weeks
     # Note: we need times
 
-    if not_anomaly:  # We can choose to only consider non anomalous values in the computing of means.
-        means = single_KPI[single_KPI.label == 0].groupby([MINUTE])[VALUE].mean()
-    else:  # We cannot select non anomalous during testing. (TODO: In case of testing fill with means from training)
+    if ignore_anomaly: # We cannot select non anomalous during testing. (TODO: In case of testing fill with means from training)
         means = single_KPI.groupby([MINUTE])[VALUE].mean()
+    else: # We can choose to only consider non anomalous values in the computing of means.
+        means = single_KPI[single_KPI.label == 0].groupby([MINUTE])[VALUE].mean()
 
     # assert len(means)*gap.minute + gap.hour*60 == 60*24 # Check if we have a value for each minute of the day
     single_KPI.timestamp = single_KPI.index
@@ -91,11 +97,12 @@ def fill_nas(single_KPI, not_anomaly=False):
     new_values = na_KPI[MINUTE].apply(lambda x: means[x])
     values_replace_na = {
         VALUE: new_values,
-        MINUTE: na_KPI.minute.values,
-        DAY: na_KPI.day.values,
+        MINUTE: na_KPI.minute,
+        DAY: na_KPI.day,
         MINUTE_OF_WEEK: na_KPI.minute_of_week
     }
-    single_KPI.value = single_KPI.value.fillna(new_values)
+    single_KPI = single_KPI.fillna(values_replace_na)
+    # single_KPI = single_KPI.reset_index(drop=True)
     return single_KPI
 
 
@@ -106,7 +113,7 @@ def preprocess_train(raw_dataframe, train_beefed_pickle_path=TRAIN_BEEFED_PICKLE
         beefed_data = split_on_id(raw_dataframe)
         for KPI_id, df in beefed_data.items():
             print(KPI_id)
-            beefed_data[KPI_id] = fill_nas(df, not_anomaly=True)
+            beefed_data[KPI_id] = fill_nas(df, ignore_anomaly=False)
         pickle.dump(beefed_data, open(train_beefed_pickle_path, "wb"))
     else:
         beefed_data = pickle.load(open(train_beefed_pickle_path, "rb"))
@@ -119,7 +126,7 @@ def preprocess_test(raw_dataframe, test_beefed_pickle_path=TEST_BEEFED_PICKLE_PA
         beefed_data = split_on_id(raw_dataframe)
         for KPI_id, df in beefed_data.items():
             print(KPI_id)
-            beefed_data[KPI_id] = fill_nas(df, not_anomaly=False)
+            beefed_data[KPI_id] = fill_nas(df, ignore_anomaly=True)
         pickle.dump(beefed_data, open(test_beefed_pickle_path, "wb"))
     else:
         beefed_data = pickle.load(open(test_beefed_pickle_path, "rb"))
