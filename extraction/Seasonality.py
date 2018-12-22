@@ -32,20 +32,22 @@ def extend_timeseries(single_KPI, timedelta="7 days"):
 
     return extended_df
 
-# def extract_big_trend(single_KPI,window_width_minutes=1440*7):
-#     """
-#     :param dataframe: evenly spaced series, use Time.preprocess first otherwise
-#     :param window_width:
-#     :return: adds a column to the dataframe for the rolling trend
-#     :return: adds a column to the dataframe for the values minus the trend
-#     """
-#     period = single_KPI.minute[1] - single_KPI.minute[0]
-#     window_size = window_width_minutes / period
-#     #TODO:We might want to complete the dataframe to the left and to the right with an average week.
-#
-#     single_KPI["big_trend"] = \
-#         single_KPI.value.rolling_mean(window=window_size)
-#     single_KPI["trend_extracted"] = single_KPI.values - single_KPI["big_trend"]
+def extract_big_trend(single_KPI,window_width_minutes=1440*7):
+    """
+    :param dataframe: evenly spaced series, use Time.preprocess first otherwise
+    :param window_width:
+    :return: adds a column to the dataframe for the rolling trend
+    """
+    start = single_KPI.timestamp[0]
+    end = single_KPI.timestamp[-1]
+
+    extended_df = extend_timeseries(single_KPI)
+    big_trend = extended_df.value.rolling('7D').mean()
+    # The rolling places the value at the right edge,
+    # let's adjust it by translating the obtained values 3.5days to the left.
+    big_trend.index = big_trend.index - pd.Timedelta('3.5D')
+
+    single_KPI["big_trend"] = big_trend[start:end]
 
 
 # def add_minutes_from_start(single_KPI):
