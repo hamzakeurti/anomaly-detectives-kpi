@@ -77,7 +77,7 @@ def main():
         prediction = pdp.predict(df)
 
         if preprocess:
-            prediction = remove_imputed(prediction,df)
+            prediction, _ = remove_imputed(prediction,df)
         ids_prediction[id] = prediction
 
         sections = Analyze.data_to_sections(og_df)

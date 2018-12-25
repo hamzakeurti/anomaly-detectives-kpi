@@ -8,7 +8,7 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib
 
-from extraction import Time
+from extraction import Time, Seasonality
 from predictors.MovingAveragePredictor import MovingAveragePredictor
 from predictors.MovingAverageRollingStdPredictor import MovingAverageRollingStdPredictor
 from predictors.RandomForestPredictor import RandomForestPredictor
@@ -31,8 +31,20 @@ def predict_per_kpi(test_df, args):
     split = split_on_id(test_df)
     for id, df in split.items():
         print('Predicting KPI: %s' % id)
-        predictor = eval(args.predictor)(*args.params)
+
+        predictor = config.paramsPerKPI[args.config][id]['predictor']
+        params = config.paramsPerKPI[args.config][id]['params']
+        preprocess = config.paramsPerKPI[args.config][id]['preprocess']
+
+        if preprocess:
+            df = Seasonality.preprocess(df,refreshPickle=True)
+
+        predictor = eval(predictor + '(' + params + ')')
         prediction = predictor.predict(df)
+
+        if preprocess:
+            prediction, df = remove_imputed(prediction,df)
+
         to_append = pd.DataFrame(columns=['KPI ID', 'timestamp', 'predict'])
         to_append['predict'], to_append['timestamp'], to_append['KPI ID'], = prediction.astype(
             int).values, df.timestamp.values, id
@@ -44,8 +56,16 @@ def predict(test_df, args):
     submission_df = pd.DataFrame(columns=['KPI ID', 'timestamp', 'predict'])
     predictor = config.paramsAllKPIs[args.config]['predictor']
     params = config.paramsAllKPIs[args.config]['params']
-    predictor = eval(predictor)(*params)
+    preprocess = config.paramsAllKPIs[args.config]['preprocess']
+    if preprocess:
+        test_df = Seasonality.preprocess(test_df,refreshPickle=True)
+
+    predictor = eval(predictor + '('+ params + ')')
     prediction = predictor.predict(test_df)
+
+    if preprocess:
+        prediction, test_df = remove_imputed(prediction, test_df)
+
     submission_df['predict'], submission_df['timestamp'], submission_df['KPI ID'], = prediction.astype(
         int).values, test_df.timestamp.values, test_df.id.values
 
@@ -78,7 +98,7 @@ def main():
         submission_df = predict(test_df, args)
     else:
         submission_df = predict_per_kpi(test_df, args)
-    submission_df.to_csv(os.path.join(args.outPath, 'submission_%s.csv' % time.time()), index=False)
+    submission_df.to_csv(os.path.join(args.outPath, 'submission_%s.csv' % time.strftime("%Y%m%d-%H%M%S")), index=False)
 
 
 if __name__ == '__main__':
