@@ -96,24 +96,26 @@ def fill_nas(single_KPI, ignore_anomaly=False):
     Pass a single KPI in, which timestamps column is already converted to datetime format
     """
     # We need minutes column to proceed.
-    extract_seasonal_time(single_KPI)
+    new_single_KPI = single_KPI.copy()
 
-    single_KPI.index = pd.DatetimeIndex(single_KPI.timestamp)
+    extract_seasonal_time(new_single_KPI)
 
-    start = single_KPI.head(1).timestamp.iloc[0]
-    end = single_KPI.tail(1).timestamp.iloc[0]
-    gap = single_KPI.head(2).timestamp.iloc[1] - start
+    new_single_KPI.index = pd.DatetimeIndex(new_single_KPI.timestamp)
+
+    start = new_single_KPI.head(1).timestamp.iloc[0]
+    end = new_single_KPI.tail(1).timestamp.iloc[0]
+    gap = new_single_KPI.head(2).timestamp.iloc[1] - start
 
     indices = pd.date_range(start, end, freq=gap)
 
-    single_KPI[IMPUTED] = 0  # Whether or not the row is imputed
-    single_KPI = single_KPI.reindex(indices)
+    new_single_KPI[IMPUTED] = 0  # Whether or not the row is imputed
+    new_single_KPI = new_single_KPI.reindex(indices)
     values_replace_na = {
-        KPI_ID: single_KPI[KPI_ID].iloc[0],
+        KPI_ID: new_single_KPI[KPI_ID].iloc[0],
         LABEL: 0,
         IMPUTED: 1
     }
-    single_KPI = single_KPI.fillna(values_replace_na)
+    new_single_KPI = new_single_KPI.fillna(values_replace_na)
 
     # Let's fill the value column now!
     # For each missing value at minute i of the week,
@@ -121,13 +123,13 @@ def fill_nas(single_KPI, ignore_anomaly=False):
     # Note: we need times
 
     if ignore_anomaly:  # We cannot select non anomalous during testing. (TODO: In case of testing fill with means from training)
-        means = single_KPI.groupby([MINUTE])[VALUE].mean()
+        means = new_single_KPI.groupby([MINUTE])[VALUE].mean()
     else:  # We can choose to only consider non anomalous values in the computing of means.
-        means = single_KPI[single_KPI.label == 0].groupby([MINUTE])[VALUE].mean()
+        means = new_single_KPI[new_single_KPI.label == 0].groupby([MINUTE])[VALUE].mean()
 
     # assert len(means)*gap.minute + gap.hour*60 == 60*24 # Check if we have a value for each minute of the day
-    single_KPI.timestamp = single_KPI.index
-    na_KPI = single_KPI[single_KPI.imputed == 1]
+    new_single_KPI.timestamp = new_single_KPI.index
+    na_KPI = new_single_KPI[new_single_KPI.value.isna()]
     if len(na_KPI) != 0:  # extract_seasonal_time breaks otherwise
         extract_seasonal_time(na_KPI)
 
@@ -138,9 +140,9 @@ def fill_nas(single_KPI, ignore_anomaly=False):
             DAY: na_KPI.day,
             MINUTE_OF_WEEK: na_KPI.minute_of_week
         }
-        single_KPI = single_KPI.fillna(values_replace_na)
+        new_single_KPI = new_single_KPI.fillna(values_replace_na)
         # single_KPI = single_KPI.reset_index(drop=True)
-    return single_KPI
+    return new_single_KPI
 
 
 def preprocess_train(raw_dataframe, train_beefed_pickle_path=TRAIN_BEEFED_PICKLE_PATH, refreshPickle=False):
