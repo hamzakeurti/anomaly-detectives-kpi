@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 from extraction import Time
 
@@ -7,8 +9,34 @@ BIG_TREND_STDS = "big_trend_stds"
 BIG_TREND_EXTRACTED = "big_trend_extracted"
 WEEKLY_EXTRACTED = "weekly_extracted"
 EXTRACTED_DAILY = "extracted_daily"
+PREPPED_TRAIN_PICKLE_FOLDER = os.path.join('data','prepped_train')
 
-def extend_timeseries(single_KPI, to_extend = "value", timedelta="7 days"):
+def preprocess(single_KPI, pickle_folder=PREPPED_TRAIN_PICKLE_FOLDER, refreshPickle=False,ignore_anomaly=True):
+    if not os.path.exists(pickle_folder):
+        os.makedirs(pickle_folder)
+    kpi = single_KPI['KPI ID'].iloc[0]
+    pickle_path = os.path.join(pickle_folder,kpi + '.p')
+    if (not os.path.exists(pickle_path)) or refreshPickle:
+
+        Time.format_timestamp(single_KPI)
+        single_KPI = Time.fill_nas(single_KPI,ignore_anomaly)
+        # single_KPI = extend_timeseries(single_KPI)
+        extract_big_trend(single_KPI)
+        extract_weekly_seasonality(single_KPI)
+        extract_daily_seasonality(single_KPI)
+
+        #This to deal with the extended values. TODO Might want to mark those as extended, and give proper values for all columns
+        # single_KPI['KPI ID'] = kpi
+        # single_KPI['imputed'] = single_KPI['imputed'].map({float('NaN'): 1, 0: 0})
+        # Replace value columns by the extracted daily, for later use
+        to_return = single_KPI.loc[:, single_KPI.columns != 'value'].rename(columns={'extracted_daily': 'value'})
+        to_return.to_pickle(pickle_path)
+    else:
+        to_return = pd.read_pickle(pickle_path)
+    return to_return
+
+
+def extend_timeseries(single_KPI, to_extend="value", timedelta="7 days"):
     """
 
     :param single_KPI: Must have gone through Time.fillna()
@@ -32,11 +60,12 @@ def extend_timeseries(single_KPI, to_extend = "value", timedelta="7 days"):
     # Now let's fill the minute columns, we'll need it to fill the extended values.
     Time.extract_seasonal_time(extended_df)
     extended_values = extended_df[extended_df[to_extend].isna()]['minute'].apply(lambda x: means[x])
-    extended_df = extended_df.fillna({to_extend:extended_values,'label':0})
+    extended_df = extended_df.fillna({to_extend: extended_values, 'label': 0})
 
     return extended_df
 
-def extract_big_trend(single_KPI,window_width_minutes=1440*7):
+
+def extract_big_trend(single_KPI, window_width_minutes=1440 * 7):
     """
     :param dataframe: evenly spaced series, use Time.preprocess first otherwise
     :param window_width:
@@ -55,13 +84,14 @@ def extract_big_trend(single_KPI,window_width_minutes=1440*7):
 
     single_KPI[BIG_TREND_MEANS] = big_trend_means[start:end]
     single_KPI[BIG_TREND_STDS] = big_trend_stds[start:end]
-    single_KPI[BIG_TREND_EXTRACTED] = (single_KPI['value'] - single_KPI[BIG_TREND_MEANS])/single_KPI[BIG_TREND_STDS]
+    single_KPI[BIG_TREND_EXTRACTED] = (single_KPI['value'] - single_KPI[BIG_TREND_MEANS]) / single_KPI[BIG_TREND_STDS]
+
 
 def extract_weekly_seasonality(single_KPI):
     start = single_KPI.timestamp[0]
     end = single_KPI.timestamp[-1]
 
-    extended_extracted = extend_timeseries(single_KPI=single_KPI,to_extend=BIG_TREND_EXTRACTED)
+    extended_extracted = extend_timeseries(single_KPI=single_KPI, to_extend=BIG_TREND_EXTRACTED)
     daily_average = extended_extracted[BIG_TREND_EXTRACTED].rolling('1D').mean()
     daily_average.index = daily_average.index - pd.Timedelta('0.5D')
 
@@ -75,6 +105,18 @@ def extract_daily_seasonality(single_KPI):
     means = single_KPI.groupby('minute')[WEEKLY_EXTRACTED].mean()
 
     single_KPI[EXTRACTED_DAILY] = single_KPI.apply(lambda x: x[WEEKLY_EXTRACTED] - means[x['minute']], axis=1)
+
+# def extract_seasonal_component(single_KPI,big_width,small_width):
+#     '''
+#     Adds a column to single_KPI that contains repetitions with period big_width of moving averages width window size
+#     small_width applied to the value column.
+#     For big trend: big_width = the entire period of single_KPI, there is only one repitition, and small_width would typically be week.
+#     For eg weekly trend: big_widht = one week, this will repeat as many times as there are weeks in the entire period, and small_width could be day
+#     :param single_KPI: Evenly spaced series *that can contain NaN values*
+#     '''
+#     season_averages = get_averages_per_period #TODO This is nice and general, but maybe hard to let play well with pandas timedelta, groupby, ...
+
+# def extract_big_trend_ignore_imputed(single_KPI):
 
 # def add_minutes_from_start(single_KPI):
 #     gap = int(single_KPI.head(2).timestamp.iloc[1] - single_KPI.head(2).timestamp.iloc[0])

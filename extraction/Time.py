@@ -28,6 +28,14 @@ def format_timestamp(dataframe):
     dataframe.timestamp = dataframe.timestamp.apply(lambda x: datetime.datetime.fromtimestamp(x))
 
 
+def unformat_timestamp(df):
+    """
+    Modifies input
+    Converts datetime object to int indicating its seconds
+    """
+    df.timestamp = df.timestamp.apply(lambda x: int(datetime.datetime.timestamp(x)))
+
+
 def extract_seasonal_time(dataframe):
     """Modifies input. Adds columns:
     minute (minutes of the day 0 to 60*24-1)
@@ -52,6 +60,34 @@ def get_minute_of_day_column(timestamps):
 
 def get_day_of_week_column(timestamps):
     return timestamps.apply(lambda x: int(x.weekday()))
+
+
+def fill_nas_NaN_value(single_KPI):
+    '''
+    :param single_KPI: Dataframe with single KPI and unformatted timestamp
+    :return:
+    '''
+    extract_seasonal_time(single_KPI)
+
+    single_KPI.index = pd.DatetimeIndex(single_KPI.timestamp)
+
+    start = single_KPI.head(1).timestamp.iloc[0]
+    end = single_KPI.tail(1).timestamp.iloc[0]
+    gap = single_KPI.head(2).timestamp.iloc[1] - start
+
+    indices = pd.date_range(start, end, freq=gap)
+
+    single_KPI[IMPUTED] = 0  # Whether or not the row is imputed
+    single_KPI = single_KPI.reindex(indices)
+    values_replace_na = {
+        KPI_ID: single_KPI[KPI_ID].iloc[0],
+        LABEL: 0,
+        IMPUTED: 1,
+        VALUE: float('NaN')
+    }
+    single_KPI = single_KPI.fillna(values_replace_na)
+    single_KPI.timestamp = single_KPI.index
+    return single_KPI
 
 
 def fill_nas(single_KPI, ignore_anomaly=False):
@@ -84,25 +120,26 @@ def fill_nas(single_KPI, ignore_anomaly=False):
     # we will use the mean over all available values at same minute of different weeks
     # Note: we need times
 
-    if ignore_anomaly: # We cannot select non anomalous during testing. (TODO: In case of testing fill with means from training)
+    if ignore_anomaly:  # We cannot select non anomalous during testing. (TODO: In case of testing fill with means from training)
         means = single_KPI.groupby([MINUTE])[VALUE].mean()
-    else: # We can choose to only consider non anomalous values in the computing of means.
+    else:  # We can choose to only consider non anomalous values in the computing of means.
         means = single_KPI[single_KPI.label == 0].groupby([MINUTE])[VALUE].mean()
 
     # assert len(means)*gap.minute + gap.hour*60 == 60*24 # Check if we have a value for each minute of the day
     single_KPI.timestamp = single_KPI.index
     na_KPI = single_KPI[single_KPI.imputed == 1]
-    extract_seasonal_time(na_KPI)
+    if len(na_KPI) != 0:  # extract_seasonal_time breaks otherwise
+        extract_seasonal_time(na_KPI)
 
-    new_values = na_KPI[MINUTE].apply(lambda x: means[x])
-    values_replace_na = {
-        VALUE: new_values,
-        MINUTE: na_KPI.minute,
-        DAY: na_KPI.day,
-        MINUTE_OF_WEEK: na_KPI.minute_of_week
-    }
-    single_KPI = single_KPI.fillna(values_replace_na)
-    # single_KPI = single_KPI.reset_index(drop=True)
+        new_values = na_KPI[MINUTE].apply(lambda x: means[x])
+        values_replace_na = {
+            VALUE: new_values,
+            MINUTE: na_KPI.minute,
+            DAY: na_KPI.day,
+            MINUTE_OF_WEEK: na_KPI.minute_of_week
+        }
+        single_KPI = single_KPI.fillna(values_replace_na)
+        # single_KPI = single_KPI.reset_index(drop=True)
     return single_KPI
 
 
@@ -131,6 +168,15 @@ def preprocess_test(raw_dataframe, test_beefed_pickle_path=TEST_BEEFED_PICKLE_PA
     else:
         beefed_data = pickle.load(open(test_beefed_pickle_path, "rb"))
     return beefed_data
+
+
+def remove_imputed(predicted, input):
+    """
+    Removes rows from predicted for which the value in the column 'imputed' in input is 1.
+    Assumes predicted and input are dataframes whose rows correspond
+    """
+    input['predicted'] = list(predicted)
+    return input.loc[input['imputed'] == 0]['predicted']
 
 
 def remove_imputed_predictions(ids_predictions, beefed_data):

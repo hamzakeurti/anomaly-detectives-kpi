@@ -17,7 +17,7 @@ from predictors.WeekOverWeekPredictor import WeekOverWeekPredictor
 
 from Util import *
 from extraction.Time import *
-# matplotlib.use('Qt5Agg')
+import config# matplotlib.use('Qt5Agg')
 import pickle
 from visualization.visualize import *
 from predictors.PeriodicMovingAveragePredictor import PeriodicMovingAveragePredictor
@@ -42,22 +42,28 @@ def predict_per_kpi(test_df, args):
 
 def predict(test_df, args):
     submission_df = pd.DataFrame(columns=['KPI ID', 'timestamp', 'predict'])
-    predictor = eval(args.predictor)(*args.params)
+    predictor = config.paramsAllKPIs[args.config]['predictor']
+    params = config.paramsAllKPIs[args.config]['params']
+    predictor = eval(predictor)(*params)
     prediction = predictor.predict(test_df)
     submission_df['predict'], submission_df['timestamp'], submission_df['KPI ID'], = prediction.astype(
         int).values, test_df.timestamp.values, test_df.id.values
 
 
 def getargs():
-    parser = argparse.ArgumentParser(description = 'Make submission file with given predictor')
-    parser.add_argument('predictor',
-                        help='name of the predictor to use')
-    parser.add_argument('--params', dest='params', nargs='+')
-    parser.add_argument('--out', dest='outPath', default=os.path.join('results','submissions'))
-    parser.add_argument('--per_kpi', dest='outPath', default='results')
-    parser.add_argument('--not_per_kpi', dest='not_per_kpi', action='store_true',default=False)
+    parser = argparse.ArgumentParser(description='Make submission file with given predictor')
+    parser.add_argument('--out', dest='outPath', help='Where the submission csv will be stored'
+                        , default=os.path.join('results', 'submissions'))
+    parser.add_argument('--not_per_kpi',
+                        help='whether to run the predictor per KPI (False), or for all KPIs mixed (True). '
+                             'Defaults to False', dest='not_per_kpi', action='store_true', default=False)
+    parser.add_argument('config', help='Name of the configuration in config.py to be used. If not None, '
+                                         'then other arguments will be ignored')
+    # parser.add_argument('--predictor',
+    #                     help='name of the predictor to use')
+    # parser.add_argument('--params', dest='params', nargs='+')
     args = parser.parse_args()
-    args.params = Util.extra_parse(args.params)
+    # args.params = Util.extra_parse(args.params) #This was for direct giving of params,for distinguishing numeric from string params
     return args
 
 
@@ -69,10 +75,10 @@ def main():
         os.makedirs(args.outPath)
 
     if args.not_per_kpi:
-        submission_df = predict(test_df,args)
+        submission_df = predict(test_df, args)
     else:
-        submission_df = predict_per_kpi(test_df,args)
-    submission_df.to_csv(os.path.join(args.outPath,'submission_%s.csv' % time.time()), index=False)
+        submission_df = predict_per_kpi(test_df, args)
+    submission_df.to_csv(os.path.join(args.outPath, 'submission_%s.csv' % time.time()), index=False)
 
 
 if __name__ == '__main__':
