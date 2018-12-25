@@ -37,12 +37,14 @@ class PeriodicDerivativePredictor(Predictor):
         values = values / dtimestamps
         timestamps = timestamps[self.width:]
 
-        min = self.period
-        prev = 0
-        for timestamp in timestamps:
-            if timestamp - prev < min:
-                min = timestamp - prev
-            prev = timestamp
+        min = dtimestamps.min()
+
+        # prev = 0
+        # for timestamp in timestamps:
+        #     if timestamp - prev < min:
+        #         min = timestamp - prev
+        #         True
+        #     prev = timestamp
 
         bins = []
         for i in range(0, self.period, min):

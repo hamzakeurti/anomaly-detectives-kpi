@@ -174,11 +174,11 @@ def preprocess_test(raw_dataframe, test_beefed_pickle_path=TEST_BEEFED_PICKLE_PA
 
 def remove_imputed(predicted, input):
     """
-    Removes rows from predicted for which the value in the column 'imputed' in input is 1.
+    Removes rows from predicted and input for which the value in the column 'imputed' in input is 1.
     Assumes predicted and input are dataframes whose rows correspond
     """
     input['predicted'] = list(predicted)
-    return input.loc[input['imputed'] == 0]['predicted']
+    return input.loc[input['imputed'] == 0]['predicted'], input.loc[input['imputed'] == 0,input.columns != 'predicted']
 
 
 def remove_imputed_predictions(ids_predictions, beefed_data):

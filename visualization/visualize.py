@@ -37,6 +37,34 @@ def refresh_visualization_test():
         plt.savefig(os.path.join(TEST_FIGS,'test_%s' % id))
         plt.close()
 
+def refresh_visualization_compare():
+
+    data_test = split_on_id(load_test())
+    data_tr = split_on_id(load_train())
+
+    if not os.path.exists('data/compare/plots'):
+        os.makedirs('data/compare/plots')
+    if not os.path.exists('data/compare/figs'):
+        os.makedirs('data/compare/figs')
+
+    for kpi_id in data_test.keys():
+        tr = data_tr[kpi_id]
+        te = data_test[kpi_id]
+        format_timestamp(tr)
+        format_timestamp(te)
+        fig, (ax_tr, ax_te) = plt.subplots(2, 1, figsize=(10, 5))
+        ax_tr.scatter(tr.timestamp.values, tr.value.values,
+                      marker='.')
+        ax_tr.annotate(kpi_id, xy=(0.05, 0.95), xycoords='axes fraction')
+        ax_te.scatter(te.timestamp.values, te.value.values,
+                      marker='.')
+        ax_te.annotate(kpi_id, xy=(0.05, 0.95), xycoords='axes fraction')
+        with open(os.path.join('data/compare/plots', 'compare_%s.pickle') % kpi_id, 'wb') as f:
+            pickle.dump(fig, f)
+        plt.savefig(os.path.join('data/compare/figs', 'test_%s' % kpi_id))
+        plt.close()
+
+
 def refresh_visualization_anomalies():
     '''
     Persists pyplots and png images of the KPI's with anomalies visualized
