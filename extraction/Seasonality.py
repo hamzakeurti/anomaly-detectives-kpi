@@ -11,6 +11,7 @@ WEEKLY_EXTRACTED = "weekly_extracted"
 EXTRACTED_DAILY = "extracted_daily"
 PREPPED_TRAIN_PICKLE_FOLDER = os.path.join('data','prepped_train')
 
+
 def preprocess(single_KPI, pickle_folder=PREPPED_TRAIN_PICKLE_FOLDER, refreshPickle=False,ignore_anomaly=True):
     if not os.path.exists(pickle_folder):
         os.makedirs(pickle_folder)
@@ -30,6 +31,7 @@ def preprocess(single_KPI, pickle_folder=PREPPED_TRAIN_PICKLE_FOLDER, refreshPic
         # single_KPI['imputed'] = single_KPI['imputed'].map({float('NaN'): 1, 0: 0})
         # Replace value columns by the extracted daily, for later use
         to_return = single_KPI.loc[:, single_KPI.columns != 'value'].rename(columns={'extracted_daily': 'value'})
+        to_return['label'] = to_return.label.astype(int)
         to_return.to_pickle(pickle_path)
     else:
         to_return = pd.read_pickle(pickle_path)
