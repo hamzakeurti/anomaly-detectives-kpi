@@ -1,0 +1,29 @@
+
+
+KPI ID = e0770391decc44ce beset fscore = 0.939642200300953, train_loss: 0.0032314853986351155, threshold = 0.22
+KPI ID = 71595dd7171f4540 beset fscore = 0.654320987654321, train_loss: 0.004065070890244779, threshold = 0.33
+KPI ID = a40b1df87e3f1c87 beset fscore = 0.8942857142857144, train_loss: 0.003072295137121271, threshold = 0.28
+KPI ID = 9bd90500bfd11edb beset fscore = 0.9225806451612903, train_loss: 0.0014261619532142352, threshold = 0.41000000000000003
+KPI ID = b3b2e6d1a791d63a beset fscore = 0.6666666666666666, train_loss: 0.01680064819196239, threshold = 0.67
+KPI ID = 54e8a140f6237526 beset fscore = 0.8, train_loss: 0.01231052092777063, threshold = 0.88
+KPI ID = 02e99bd4f6cfb33f beset fscore = 0.9270565267548141, train_loss: 0.006929601818605368, threshold = 0.07
+KPI ID = 046ec29ddf80d62e beset fscore = 1.0, train_loss: 0.005248701494234139, threshold = 0.84
+KPI ID = 09513ae3e75778a3 beset fscore = 0.2012987012987013, train_loss: 0.009248982327530084, threshold = 0.46
+KPI ID = da403e4e3f87c9e0 beset fscore = 1.0, train_loss: 0.0029986704287235984, threshold = 0.1
+KPI ID = a5bf5d65261d859a beset fscore = 1.0, train_loss: 0.0011856843961785299, threshold = 0.13
+KPI ID = 8c892e5525f3e491 beset fscore = 0.1490668213905812, train_loss: 0.003263634395063903, threshold = 0.03
+KPI ID = 1c35dbf57f55f5e4 beset fscore = 0.46550500670188444, train_loss: 0.008967204794947935, threshold = 0.01
+KPI ID = 769894baefea4e9e beset fscore = 0.8571428571428571, train_loss: 0.003200343100556371, threshold = 0.46
+KPI ID = c58bfcbacb2822d1 beset fscore = 0.3959044368600682, train_loss: 0.0011929341054510306, threshold = 0.29
+KPI ID = 8bef9af9a922e0b3 beset fscore = 0.7335722819593788, train_loss: 0.003987208873759025, threshold = 0.3
+KPI ID = 40e25005ff8992bd beset fscore = 0.44298605414274, train_loss: 0.004978600713765896, threshold = 0.2
+KPI ID = e0770391decc44ce beset fscore = 0.939485122032765, train_loss: 0.0032295918740693785, threshold = 0.22
+KPI ID = 8a20c229e9860d0c beset fscore = 1.0, train_loss: 0.004641243280099772, threshold = 0.98
+KPI ID = 88cf3a776ba00e7c beset fscore = 0.8840114806685802, train_loss: 0.0003095068607201974, threshold = 0.02
+KPI ID = 76f4550c43334374 beset fscore = 0.9886363636363636, train_loss: 0.0043626514809333465, threshold = 0.53
+KPI ID = 7c189dd36f048a6c beset fscore = 0.7507246376811595, train_loss: 0.0032296559302680294, threshold = 0.3
+KPI ID = 9ee5879409dccef9 beset fscore = 0.9556254367575122, train_loss: 0.0002891808235848852, threshold = 0.05
+KPI ID = 18fbb1d5a5dc099d beset fscore = 0.16305108467459764, train_loss: 0.014279900122220857, threshold = 0.01
+KPI ID = 07927a9a18fa19ae beset fscore = 0.7394957983193278, train_loss: 0.0014259889931790232, threshold = 0.47000000000000003
+KPI ID = cff6d3c01e6a6bfa beset fscore = 0.6176644931831654, train_loss: 0.004178480371422477, threshold = 0.25
+KPI ID = affb01ca2b4f0b45 beset fscore = 0.6975369458128078, train_loss: 0.0039295731540717116, threshold = 0.28
