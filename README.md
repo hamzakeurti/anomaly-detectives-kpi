@@ -10,4 +10,4 @@ Competition website: http://iops.ai/competition_detail/?competition_id=7&flag=1
 Mendeley folder (for relevant articles): https://www.mendeley.com/community/anomaly-detectives/
 
 Slack workspace --> https://anomalydetectives.slack.com/
-
+ Final presentation --> https://docs.google.com/presentation/d/1HUj2uXjPr3fMcLHSK7N9ItwYn5SrQWkgqqO_2RDK_MU/edit#slide=id.p1
