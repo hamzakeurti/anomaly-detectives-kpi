@@ -77,14 +77,14 @@ def fill_nas_NaN_value(single_KPI):
 
     indices = pd.date_range(start, end, freq=gap)
 
-    single_KPI[IMPUTED] = 0  # Whether or not the row is imputed
-    single_KPI = single_KPI.reindex(indices)
     values_replace_na = {
         KPI_ID: single_KPI[KPI_ID].iloc[0],
         LABEL: 0,
         IMPUTED: 1,
         VALUE: float('NaN')
     }
+    single_KPI[IMPUTED] = 0  # Whether or not the row is imputed
+    single_KPI = single_KPI.reindex(indices)
     single_KPI = single_KPI.fillna(values_replace_na)
     single_KPI.timestamp = single_KPI.index
     return single_KPI

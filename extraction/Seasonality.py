@@ -1,31 +1,35 @@
 import os
 
 import pandas as pd
+import numpy as np
 from extraction import Time
 
+VALUE = "value"
+PREDICT = "predict"
 MINUTE_FROM_START = "minute_from_start"
 BIG_TREND_MEANS = "big_trend_means"
 BIG_TREND_STDS = "big_trend_stds"
 BIG_TREND_EXTRACTED = "big_trend_extracted"
 WEEKLY_EXTRACTED = "weekly_extracted"
 EXTRACTED_DAILY = "extracted_daily"
-PREPPED_TRAIN_PICKLE_FOLDER = os.path.join('data','prepped_train')
+PREPPED_TRAIN_PICKLE_FOLDER = os.path.join('data', 'prepped_train')
 
-def preprocess(single_KPI, pickle_folder=PREPPED_TRAIN_PICKLE_FOLDER, refreshPickle=False,ignore_anomaly=True):
+
+def preprocess(single_KPI, pickle_folder=PREPPED_TRAIN_PICKLE_FOLDER, refreshPickle=False, ignore_anomaly=True):
     if not os.path.exists(pickle_folder):
         os.makedirs(pickle_folder)
     kpi = single_KPI['KPI ID'].iloc[0]
-    pickle_path = os.path.join(pickle_folder,kpi + '.p')
+    pickle_path = os.path.join(pickle_folder, kpi + '.p')
     if (not os.path.exists(pickle_path)) or refreshPickle:
 
         Time.format_timestamp(single_KPI)
-        single_KPI = Time.fill_nas(single_KPI,ignore_anomaly)
+        single_KPI = Time.fill_nas(single_KPI, ignore_anomaly)
         # single_KPI = extend_timeseries(single_KPI)
         extract_big_trend(single_KPI)
         extract_weekly_seasonality(single_KPI)
         extract_daily_seasonality(single_KPI)
 
-        #This to deal with the extended values. TODO Might want to mark those as extended, and give proper values for all columns
+        # This to deal with the extended values. TODO Might want to mark those as extended, and give proper values for all columns
         # single_KPI['KPI ID'] = kpi
         # single_KPI['imputed'] = single_KPI['imputed'].map({float('NaN'): 1, 0: 0})
         # Replace value columns by the extracted daily, for later use
@@ -65,7 +69,7 @@ def extend_timeseries(single_KPI, to_extend="value", timedelta="7 days"):
     return extended_df
 
 
-def extract_big_trend(single_KPI, window_width_minutes=1440 * 7):
+def extract_big_trend(single_KPI, ignore_predict=False):
     """
     :param dataframe: evenly spaced series, use Time.preprocess first otherwise
     :param window_width:
@@ -75,6 +79,10 @@ def extract_big_trend(single_KPI, window_width_minutes=1440 * 7):
     end = single_KPI.timestamp[-1]
 
     extended_df = extend_timeseries(single_KPI)
+
+    if ignore_predict:
+        extended_df[start:end].loc[extended_df[PREDICT] == True, VALUE] = np.nan
+
     big_trend_means = extended_df.value.rolling('7D').mean()
     big_trend_stds = extended_df.value.rolling('7D').std()
     # The rolling places the value at the right edge,
@@ -84,14 +92,18 @@ def extract_big_trend(single_KPI, window_width_minutes=1440 * 7):
 
     single_KPI[BIG_TREND_MEANS] = big_trend_means[start:end]
     single_KPI[BIG_TREND_STDS] = big_trend_stds[start:end]
-    single_KPI[BIG_TREND_EXTRACTED] = (single_KPI['value'] - single_KPI[BIG_TREND_MEANS]) / single_KPI[BIG_TREND_STDS]
+    single_KPI[BIG_TREND_EXTRACTED] = (single_KPI[VALUE] - single_KPI[BIG_TREND_MEANS]) / single_KPI[BIG_TREND_STDS]
 
 
-def extract_weekly_seasonality(single_KPI):
+def extract_weekly_seasonality(single_KPI, ignore_predict=False):
     start = single_KPI.timestamp[0]
     end = single_KPI.timestamp[-1]
 
     extended_extracted = extend_timeseries(single_KPI=single_KPI, to_extend=BIG_TREND_EXTRACTED)
+
+    if ignore_predict:
+        extended_extracted[start:end].loc[extended_extracted[PREDICT] == True, BIG_TREND_EXTRACTED] = np.nan
+
     daily_average = extended_extracted[BIG_TREND_EXTRACTED].rolling('1D').mean()
     daily_average.index = daily_average.index - pd.Timedelta('0.5D')
 
@@ -101,8 +113,11 @@ def extract_weekly_seasonality(single_KPI):
                                                     axis=1)
 
 
-def extract_daily_seasonality(single_KPI):
-    means = single_KPI.groupby('minute')[WEEKLY_EXTRACTED].mean()
+def extract_daily_seasonality(single_KPI, ignore_predict=False):
+    if ignore_predict:
+        means = single_KPI[single_KPI[PREDICT] == False].groupby('minute')[WEEKLY_EXTRACTED].mean()
+    else:
+        means = single_KPI.groupby('minute')[WEEKLY_EXTRACTED].mean()
 
     single_KPI[EXTRACTED_DAILY] = single_KPI.apply(lambda x: x[WEEKLY_EXTRACTED] - means[x['minute']], axis=1)
 
