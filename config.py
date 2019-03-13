@@ -26,7 +26,7 @@ paramsPerKPI = \
           '9bd90500bfd11edb': {'predictor': PDP, 'params':'width=1, period=86400, sigma=5.5', 'preprocess': False},  # 3.5 already better
           '9ee5879409dccef9': {'predictor': PDP, 'params':'width=1, period=86400, sigma=3', 'preprocess': False},
           'a40b1df87e3f1c87': {'predictor': PDP, 'params':'width=1, period=86400, sigma=3.5', 'preprocess': False},  # GOOD
-          'a5bf5d65261d859a': {'predictor': PDP, 'params':'width=1, period=86400, sigma=4.5', 'preprocess': False},
+          'a5bf5d65261d859a': {'predictor': PDP, 'params':'width=1, period=86400, sigma=9.3', 'preprocess': False},
           'affb01ca2b4f0b45': {'predictor': PDP, 'params':'width=1, period=86400, sigma=3.5', 'preprocess': False},
           'b3b2e6d1a791d63a': {'predictor': PDP, 'params':'width=1, period=86400, sigma=4', 'preprocess': False},
           'c58bfcbacb2822d1': {'predictor': PDP, 'params':'width=1, period=86400, sigma=4', 'preprocess': False},
